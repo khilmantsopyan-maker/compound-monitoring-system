@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compound Monitoring System - IP Production</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --panel-bg: rgba(22, 27, 34, 0.85);
+      --gold-accent: #f59e0b;
+      --gold-glow: rgba(245, 158, 11, 0.3);
+      --slot-empty-bg: linear-gradient(145deg, #374151, #1f2937);
+      --slot-filled: linear-gradient(145deg, #10b981, #059669);
+      --slot-filled-glow: rgba(16, 185, 129, 0.4);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --error-color: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background: radial-gradient(circle at top center, #1e293b 0%, #0f172a 60%, #090d16 100%);
+      color: #f8fafc;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Header Panel */
+    header {
+      width: 100%;
+      max-width: 1400px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 35px;
+      padding: 20px 30px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .brand h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand p {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 3px;
+      letter-spacing: 1px;
+    }
+
+    /* Total Stats Badges di Header */
+    .header-stats {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .stat-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 8px 16px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .stat-card.main-qty {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .stat-label {
+      font-size: 0.68rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #10b981;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .btn-summary-trigger {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #000;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px var(--gold-glow);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-summary-trigger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+    }
+
+    .legend-container {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
+
+    .indicator {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+    }
+    .indicator.empty { background: #374151; border: 1px solid #475569; }
+    .indicator.filled { background: #10b981; box-shadow: 0 0 10px var(--slot-filled-glow); }
+
+    /* Layout Main Grid */
+    .board-container {
+      width: 100%;
+      max-width: 1400px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .row-line {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 24px;
+    }
+
+    .line-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .line-title {
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--gold-accent);
+      text-shadow: 0 0 12px var(--gold-glow);
+    }
+    .line-title.top { margin-bottom: 12px; }
+    .line-title.bottom { margin-top: 12px; }
+
+    /* 2x2 Slots Grid */
+    .slots-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 10px;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Slot Box Design */
+    .slot-box {
+      aspect-ratio: 1 / 1;
+      background: var(--slot-empty-bg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #9ca3af;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .slot-box:hover {
+      transform: translateY(-3px) scale(1.02);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .slot-box.filled {
+      background: var(--slot-filled);
+      color: #ffffff;
+      box-shadow: 0 0 20px var(--slot-filled-glow);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .slot-box .sub-info {
+      font-size: 0.68rem;
+      opacity: 0.9;
+      margin-top: 3px;
+      font-weight: 500;
+    }
+
+    /* MODAL POP-UP STYLES */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: #161b22;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 500px;
+      padding: 28px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .modal-header h3 {
+      font-size: 1.1rem;
+      color: var(--gold-accent);
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 1px;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .location-badge {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--gold-accent);
+      color: var(--gold-accent);
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    /* SUMMARY CARD IN SLOT MODAL */
+    .info-summary-card {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .info-row.note-row {
+      align-items: flex-start;
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
+      padding-top: 8px;
+      margin-top: 2px;
+    }
+
+    .info-label {
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    .info-value {
+      color: #f8fafc;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .info-value.note-value {
+      font-weight: 400;
+      color: #cbd5e1;
+      font-style: italic;
+      max-width: 65%;
+      word-break: break-word;
+    }
+
+    .status-tag {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .status-tag.filled { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+    .status-tag.empty { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid #475569; }
+
+    /* MENU OPTIONS */
+    .menu-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-action {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: #1e293b;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    .btn-action.take {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+    }
+
+    .btn-action.update {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #000;
+      box-shadow: 0 4px 15px var(--gold-glow);
+    }
+
+    .btn-action .sub-text {
+      font-size: 0.72rem;
+      font-weight: 400;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    /* INSTRUCTION NOTE BOX */
+    .form-instruction {
+      background: rgba(245, 158, 11, 0.1);
+      border-left: 3px solid var(--gold-accent);
+      padding: 10px 12px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      line-height: 1.4;
+    }
+
+    /* FORM LAYOUT & VALIDATION STYLES */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 100%;
+    }
+
+    .form-group label {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .required-star {
+      color: var(--error-color);
+      margin-left: 2px;
+    }
+
+    .form-group input, .form-group textarea {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input.input-error {
+      border-color: var(--error-color) !important;
+      background: rgba(239, 68, 68, 0.05);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .field-hint {
+      font-size: 0.68rem;
+      color: #64748b;
+    }
+
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      width: 100%;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .btn-save {
+      flex: 1;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #000;
+      font-weight: 700;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .btn-back {
+      background: #334155;
+      color: #fff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    /* INVENTORY SUMMARY TABLE STYLES */
+    .summary-table-wrapper {
+      max-height: 320px;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+    }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+
+    .summary-table th {
+      background: #1e293b;
+      color: var(--gold-accent);
+      padding: 12px;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+
+    .summary-table td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+    }
+
+    .summary-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .summary-table .qty-col {
+      font-weight: 700;
+      color: #10b981;
+      text-align: right;
+    }
+
+    .summary-table .slots-col {
+      text-align: center;
+      color: #94a3b8;
+    }
+
+    .empty-summary {
+      padding: 30px;
+      text-align: center;
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <h1>COMPOUND PREPARATION CONTROL</h1>
+      <p>INTEGRATED MATERIAL MONITORING SYSTEM</p>
+    </div>
+
+    <!-- STATS TOTAL DI LAYAR UTAMA -->
+    <div class="header-stats">
+      <div class="stat-card">
+        <span class="stat-label">Active Slots</span>
+        <span class="stat-value" id="globalActiveSlots" style="color: #cbd5e1;">0 / 48</span>
+      </div>
+      <div class="stat-card main-qty">
+        <span class="stat-label">Total Material</span>
+        <span class="stat-value" id="globalTotalQty">0 Kg</span>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <button class="btn-summary-trigger" onclick="openInventorySummary()">
+        <span>📊 SUMMARY DETAIL</span>
+      </button>
+      <div class="legend-container">
+        <div class="legend-item">
+          <div class="indicator empty"></div>
+          <span>Empty</span>
+        </div>
+        <div class="legend-item">
+          <div class="indicator filled"></div>
+          <span>Ready (Prepared)</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="board-container">
+    <div class="row-line" id="topRow"></div>
+    <div class="row-line" id="bottomRow"></div>
+  </div>
+
+  <!-- POP-UP MODAL MULTI-ACTION FOR SLOT -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitle">LOCATION DETAILS</h3>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+
+      <div class="location-badge" id="modalLocationBadge">
+        LINE 1 — MACHINE 01 — INJECTOR 1
+      </div>
+
+      <!-- LOCATION SUMMARY CARD -->
+      <div class="info-summary-card">
+        <div class="info-row">
+          <span class="info-label">Material Status:</span>
+          <span class="status-tag" id="summaryStatus">READY</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Model:</span>
+          <span class="info-value" id="summaryModel">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Color:</span>
+          <span class="info-value" id="summaryWarna">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Quantity (Qty):</span>
+          <span class="info-value" id="summaryQty">-</span>
+        </div>
+        <div class="info-row note-row">
+          <span class="info-label">Note / Remark:</span>
+          <span class="info-value note-value" id="summaryNote">-</span>
+        </div>
+      </div>
+
+      <!-- VIEW 1: MENU OPTIONS -->
+      <div id="viewMenu" class="menu-options">
+        <button class="btn-action take" onclick="actionTakeMaterial()">
+          <div>
+            <div>COLLECT / TAKE COMPOUND</div>
+            <div class="sub-text">For Machine Operator (Clear Slot)</div>
+          </div>
+          <span>➔</span>
+        </button>
+
+        <button class="btn-action update" onclick="showFormView()">
+          <div>
+            <div>INPUT / UPDATE DATA</div>
+            <div class="sub-text">For Mixing Operator (Set/Edit Details)</div>
+          </div>
+          <span>➔</span>
+        </button>
+      </div>
+
+      <!-- VIEW 2: FORM INPUT DATA -->
+      <div id="viewForm" style="display: none; flex-direction: column; gap: 12px;">
+        <div class="form-instruction">
+          <strong>Instruction:</strong> Fill in the compound details. Fields marked with (<span class="required-star">*</span>) are strictly required.
+        </div>
+
+        <div class="form-group">
+          <label>Model Name <span class="required-star">*</span></label>
+          <input type="text" id="modalModel" placeholder="e.g. Civic K24 / HRV" oninput="removeError(this)">
+          <span class="field-hint">Target part or vehicle model</span>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Color <span class="required-star">*</span></label>
+            <input type="text" id="modalWarna" placeholder="e.g. Red / Black" oninput="removeError(this)">
+            <span class="field-hint">Compound material color</span>
+          </div>
+          <div class="form-group">
+            <label>Qty (Kg / Bin) <span class="required-star">*</span></label>
+            <input type="number" id="modalQty" placeholder="50" min="0.1" step="any" oninput="removeError(this)">
+            <span class="field-hint">Weight in Kilograms</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Note / Description</label>
+          <textarea id="modalNote" placeholder="e.g. Batch #102, urgent requirement, priority line..."></textarea>
+          <span class="field-hint">Optional: Additional information or special instructions</span>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-back" onclick="showMenuView()">Back</button>
+          <button class="btn-save" onclick="saveCurrentSlot()">SAVE PREPARATION</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- INVENTORY SUMMARY MODAL -->
+  <div class="modal-overlay" id="summaryModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>LOCATION INVENTORY SUMMARY</h3>
+        <button class="close-btn" onclick="closeSummaryModal()">&times;</button>
+      </div>
+
+      <div class="form-instruction">
+        <strong>Overview:</strong> Total compound materials currently prepared and available across all active slots.
+      </div>
+
+      <div class="summary-table-wrapper">
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Color</th>
+              <th style="text-align: center;">Slots</th>
+              <th style="text-align: right;">Total Qty</th>
+            </tr>
+          </thead>
+          <tbody id="summaryTableBody">
+            <!-- Dynamic Data Rendered via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-back" style="width: 100%;" onclick="closeSummaryModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const lineMapping = [
+      { line: 1, mc1: 1, mc2: 2, row: 'top' },
+      { line: 2, mc1: 3, mc2: 4, row: 'top' },
+      { line: 4, mc1: 5, mc2: 6, row: 'top' },
+      { line: 5, mc1: 7, mc2: 8, row: 'top' },
+      { line: 6, mc1: 9, mc2: 10, row: 'top' },
+      { line: 7, mc1: 11, mc2: 12, row: 'top' },
+      { line: 8, mc1: 13, mc2: 14, row: 'bottom' },
+      { line: 9, mc1: 15, mc2: 16, row: 'bottom' },
+      { line: 10, mc1: 17, mc2: 18, row: 'bottom' },
+      { line: 11, mc1: 19, mc2: 20, row: 'bottom' },
+      { line: 12, mc1: 21, mc2: 22, row: 'bottom' },
+      { line: 13, mc1: 23, mc2: 24, row: 'bottom' }
+    ];
+
+    const slotsState = {};
+    let activeSlotKey = null;
+
+    function pad(num) { return String(num).padStart(2, '0'); }
+
+    // Init All Slots
+    lineMapping.forEach(item => {
+      const m1 = pad(item.mc1);
+      const m2 = pad(item.mc2);
+
+      const slots = [
+        { key: `L${item.line}-${m1}-A`, label: `${m1}-A`, mc: item.mc1, inj: '1' },
+        { key: `L${item.line}-${m2}-A`, label: `${m2}-A`, mc: item.mc2, inj: '1' },
+        { key: `L${item.line}-${m1}-b`, label: `${m1}-b`, mc: item.mc1, inj: '2' },
+        { key: `L${item.line}-${m2}-B`, label: `${m2}-B`, mc: item.mc2, inj: '2' }
+      ];
+
+      slots.forEach(s => {
+        slotsState[s.key] = {
+          line: item.line,
+          mesin: s.mc,
+          inj: s.inj,
+          label: s.label,
+          isFilled: false,
+          model: '',
+          warna: '',
+          qty: '',
+          note: ''
+        };
+      });
+    });
+
+    // Sample Initial Data
+    slotsState['L2-04-A'].isFilled = true;
+    slotsState['L2-04-A'].model = 'HRV';
+    slotsState['L2-04-A'].warna = 'Green';
+    slotsState['L2-04-A'].qty = '25';
+    slotsState['L2-04-A'].note = 'Batch #A-102';
+
+    slotsState['L4-05-A'].isFilled = true;
+    slotsState['L4-05-A'].model = 'Civic K24';
+    slotsState['L4-05-A'].warna = 'Black';
+    slotsState['L4-05-A'].qty = '50';
+
+    slotsState['L4-06-A'].isFilled = true;
+    slotsState['L4-06-A'].model = 'Civic K24';
+    slotsState['L4-06-A'].warna = 'Black';
+    slotsState['L4-06-A'].qty = '30';
+
+    function updateHeaderStats() {
+      let grandTotalQty = 0;
+      let activeSlotsCount = 0;
+      const totalSlots = Object.keys(slotsState).length;
+
+      Object.values(slotsState).forEach(slot => {
+        if (slot.isFilled) {
+          activeSlotsCount++;
+          grandTotalQty += parseFloat(slot.qty) || 0;
+        }
+      });
+
+      document.getElementById('globalTotalQty').innerText = `${grandTotalQty.toLocaleString('id-ID')} Kg`;
+      document.getElementById('globalActiveSlots').innerText = `${activeSlotsCount} / ${totalSlots}`;
+    }
+
+    function renderBoard() {
+      const topContainer = document.getElementById('topRow');
+      const bottomContainer = document.getElementById('bottomRow');
+      topContainer.innerHTML = '';
+      bottomContainer.innerHTML = '';
+
+      lineMapping.forEach(item => {
+        const m1 = pad(item.mc1);
+        const m2 = pad(item.mc2);
+        const slotKeys = [
+          `L${item.line}-${m1}-A`,
+          `L${item.line}-${m2}-A`,
+          `L${item.line}-${m1}-b`,
+          `L${item.line}-${m2}-B`
+        ];
+
+        let slotsHTML = '';
+        slotKeys.forEach(key => {
+          const slot = slotsState[key];
+          const filledClass = slot.isFilled ? 'filled' : '';
+          const subInfoHTML = slot.isFilled ? `<div class="sub-info">${slot.qty}Kg</div>` : '';
+
+          slotsHTML += `
+            <div class="slot-box ${filledClass}" onclick="openModal('${key}')">
+              ${slot.label}
+              ${subInfoHTML}
+            </div>
+          `;
+        });
+
+        const lineCard = document.createElement('div');
+        lineCard.className = 'line-card';
+
+        if (item.row === 'top') {
+          lineCard.innerHTML = `<div class="line-title top">Line ${item.line}</div><div class="slots-grid">${slotsHTML}</div>`;
+          topContainer.appendChild(lineCard);
+        } else {
+          lineCard.innerHTML = `<div class="slots-grid">${slotsHTML}</div><div class="line-title bottom">Line ${item.line}</div>`;
+          bottomContainer.appendChild(lineCard);
+        }
+      });
+
+      updateHeaderStats();
+    }
+
+    /* Slot Modal Logic */
+    function openModal(key) {
+      activeSlotKey = key;
+      const slot = slotsState[key];
+
+      document.getElementById('modalLocationBadge').innerText = 
+        `LINE ${slot.line} — MACHINE ${pad(slot.mesin)} — INJECTOR ${slot.inj} (${slot.label})`;
+
+      const statusTag = document.getElementById('summaryStatus');
+      if (slot.isFilled) {
+        statusTag.innerText = 'READY';
+        statusTag.className = 'status-tag filled';
+        document.getElementById('summaryModel').innerText = slot.model || '-';
+        document.getElementById('summaryWarna').innerText = slot.warna || '-';
+        document.getElementById('summaryQty').innerText = `${slot.qty} Kg`;
+        document.getElementById('summaryNote').innerText = slot.note || '-';
+      } else {
+        statusTag.innerText = 'EMPTY';
+        statusTag.className = 'status-tag empty';
+        document.getElementById('summaryModel').innerText = '-';
+        document.getElementById('summaryWarna').innerText = '-';
+        document.getElementById('summaryQty').innerText = '-';
+        document.getElementById('summaryNote').innerText = '-';
+      }
+
+      document.getElementById('modalModel').value = slot.model || '';
+      document.getElementById('modalWarna').value = slot.warna || '';
+      document.getElementById('modalQty').value = slot.qty || '';
+      document.getElementById('modalNote').value = slot.note || '';
+
+      clearFormErrors();
+      showMenuView();
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+      activeSlotKey = null;
+    }
+
+    function showMenuView() {
+      document.getElementById('modalTitle').innerText = 'LOCATION DETAILS';
+      document.getElementById('viewMenu').style.display = 'flex';
+      document.getElementById('viewForm').style.display = 'none';
+    }
+
+    function showFormView() {
+      document.getElementById('modalTitle').innerText = 'INPUT / UPDATE FORM';
+      document.getElementById('viewMenu').style.display = 'none';
+      document.getElementById('viewForm').style.display = 'flex';
+    }
+
+    function removeError(element) {
+      element.classList.remove('input-error');
+    }
+
+    function clearFormErrors() {
+      document.getElementById('modalModel').classList.remove('input-error');
+      document.getElementById('modalWarna').classList.remove('input-error');
+      document.getElementById('modalQty').classList.remove('input-error');
+    }
+
+    function actionTakeMaterial() {
+      if (!activeSlotKey) return;
+
+      const slot = slotsState[activeSlotKey];
+      if (!slot.isFilled) {
+        alert("This slot is already EMPTY!");
+        return;
+      }
+
+      slot.isFilled = false;
+      slot.model = '';
+      slot.warna = '';
+      slot.qty = '';
+      slot.note = '';
+
+      renderBoard();
+      closeModal();
+    }
+
+    function saveCurrentSlot() {
+      if (!activeSlotKey) return;
+
+      const modelInput = document.getElementById('modalModel');
+      const warnaInput = document.getElementById('modalWarna');
+      const qtyInput = document.getElementById('modalQty');
+
+      const modelVal = modelInput.value.trim();
+      const warnaVal = warnaInput.value.trim();
+      const qtyVal = qtyInput.value.trim();
+
+      let isValid = true;
+
+      // Mandatory Field Validation
+      if (!modelVal) {
+        modelInput.classList.add('input-error');
+        isValid = false;
+      }
+      if (!warnaVal) {
+        warnaInput.classList.add('input-error');
+        isValid = false;
+      }
+      if (!qtyVal || parseFloat(qtyVal) <= 0) {
+        qtyInput.classList.add('input-error');
+        isValid = false;
+      }
+
+      if (!isValid) {
+        alert("Harap isi semua field wajib (Model, Color, dan Qty > 0)!");
+        return;
+      }
+
+      const slot = slotsState[activeSlotKey];
+      slot.isFilled = true;
+      slot.model = modelVal;
+      slot.warna = warnaVal;
+      slot.qty = qtyVal;
+      slot.note = document.getElementById('modalNote').value.trim() || '-';
+
+      renderBoard();
+      closeModal();
+    }
+
+    /* Inventory Summary Logic */
+    function openInventorySummary() {
+      const summaryMap = {};
+
+      Object.values(slotsState).forEach(slot => {
+        if (slot.isFilled) {
+          const key = `${slot.model.trim().toUpperCase()}___${slot.warna.trim().toUpperCase()}`;
+          const qty = parseFloat(slot.qty) || 0;
+
+          if (!summaryMap[key]) {
+            summaryMap[key] = {
+              model: slot.model,
+              color: slot.warna,
+              totalQty: 0,
+              slotsCount: 0
+            };
+          }
+
+          summaryMap[key].totalQty += qty;
+          summaryMap[key].slotsCount += 1;
+        }
+      });
+
+      const tbody = document.getElementById('summaryTableBody');
+      tbody.innerHTML = '';
+
+      const items = Object.values(summaryMap);
+      if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="empty-summary">No materials currently stored in any slots.</td></tr>`;
+      } else {
+        items.forEach(item => {
+          tbody.innerHTML += `
+            <tr>
+              <td><strong>${item.model}</strong></td>
+              <td>${item.color}</td>
+              <td class="slots-col">${item.slotsCount}</td>
+              <td class="qty-col">${item.totalQty.toLocaleString('id-ID')} Kg</td>
+            </tr>
+          `;
+        });
+      }
+
+      document.getElementById('summaryModalOverlay').classList.add('active');
+    }
+
+    function closeSummaryModal() {
+      document.getElementById('summaryModalOverlay').classList.remove('active');
+    }
+
+    renderBoard();
+  </script>
+</body>
+</html>
