@@ -1,100 +1,738 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>COMPOUND PREPARATION MONITORING</title>
-  <!-- Style/CSS Anda di sini -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compound Monitoring System - IP Production</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --panel-bg: rgba(22, 27, 34, 0.85);
+      --gold-accent: #f59e0b;
+      --gold-glow: rgba(245, 158, 11, 0.3);
+      --slot-empty-bg: linear-gradient(145deg, #374151, #1f2937);
+      --slot-filled: linear-gradient(145deg, #10b981, #059669);
+      --slot-filled-glow: rgba(16, 185, 129, 0.4);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --error-color: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background: radial-gradient(circle at top center, #1e293b 0%, #0f172a 60%, #090d16 100%);
+      color: #f8fafc;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Header Panel */
+    header {
+      width: 100%;
+      max-width: 1400px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding: 20px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .brand h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand p {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      margin-top: 3px;
+      letter-spacing: 0.5px;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .stat-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 8px 12px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .stat-card.main-qty {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #10b981;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-summary-trigger {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #000;
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px var(--gold-glow);
+    }
+
+    .legend-container {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+    }
+
+    .indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+    .indicator.empty { background: #374151; border: 1px solid #475569; }
+    .indicator.filled { background: #10b981; box-shadow: 0 0 10px var(--slot-filled-glow); }
+
+    /* Layout Main Grid */
+    .board-container {
+      width: 100%;
+      max-width: 1400px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    .row-line {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+    }
+
+    .line-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .line-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--gold-accent);
+      text-shadow: 0 0 12px var(--gold-glow);
+    }
+    .line-title.top { margin-bottom: 8px; }
+    .line-title.bottom { margin-top: 8px; }
+
+    /* 2x2 Slots Grid */
+    .slots-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Slot Box Design */
+    .slot-box {
+      aspect-ratio: 1 / 1;
+      background: var(--slot-empty-bg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #9ca3af;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .slot-box.filled {
+      background: var(--slot-filled);
+      color: #ffffff;
+      box-shadow: 0 0 15px var(--slot-filled-glow);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .slot-box .sub-info {
+      font-size: 0.65rem;
+      opacity: 0.9;
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    /* MODAL POP-UP STYLES */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      padding: 15px;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: #161b22;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .modal-header h3 {
+      font-size: 1rem;
+      color: var(--gold-accent);
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+
+    .location-badge {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--gold-accent);
+      color: var(--gold-accent);
+      padding: 8px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+
+    .info-summary-card {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .info-row.note-row {
+      align-items: flex-start;
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
+      padding-top: 6px;
+      margin-top: 2px;
+    }
+
+    .info-label { color: #94a3b8; font-weight: 500; }
+    .info-value { color: #f8fafc; font-weight: 700; text-align: right; }
+    .info-value.note-value {
+      font-weight: 400; color: #cbd5e1; font-style: italic; max-width: 65%; word-break: break-word;
+    }
+
+    .status-tag {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .status-tag.filled { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+    .status-tag.empty { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid #475569; }
+
+    .menu-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-action {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: #1e293b;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .btn-action.take {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+    }
+
+    .btn-action.update {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #000;
+    }
+
+    .btn-action .sub-text {
+      font-size: 0.7rem; font-weight: 400; opacity: 0.85; margin-top: 2px;
+    }
+
+    .form-instruction {
+      background: rgba(245, 158, 11, 0.1);
+      border-left: 3px solid var(--gold-accent);
+      padding: 8px 10px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      color: #cbd5e1;
+      line-height: 1.3;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 100%;
+    }
+
+    .form-group label {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .required-star { color: var(--error-color); margin-left: 2px; }
+
+    .form-group input, .form-group textarea {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .form-group input.input-error {
+      border-color: var(--error-color) !important;
+      background: rgba(239, 68, 68, 0.05);
+    }
+
+    .form-group textarea { resize: vertical; min-height: 50px; }
+    .field-hint { font-size: 0.65rem; color: #64748b; }
+
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      width: 100%;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .btn-save {
+      flex: 1;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #000;
+      font-weight: 700;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .btn-back {
+      background: #334155;
+      color: #fff;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .summary-table-wrapper {
+      max-height: 280px;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+    }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      text-align: left;
+    }
+
+    .summary-table th {
+      background: #1e293b;
+      color: var(--gold-accent);
+      padding: 10px;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+
+    .summary-table td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+    }
+
+    .summary-table .qty-col { font-weight: 700; color: #10b981; text-align: right; }
+    .summary-table .slots-col { text-align: center; color: #94a3b8; }
+
+    /* MEDIA QUERIES UNTUK DESAIN MOBILE / TAMPILAN HP */
+    @media (max-width: 1024px) {
+      .row-line {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 12px;
+      }
+
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 16px;
+        gap: 12px;
+      }
+
+      .header-stats {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .stat-card {
+        flex: 1;
+      }
+
+      .header-controls {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .row-line {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .form-row-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .row-line {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Seluruh tampilan HTML (Header, Grid Line, Modal, dll) ada di sini -->
+  <header>
+    <div class="brand">
+      <h1>COMPOUND PREPARATION</h1>
+      <p>INTEGRATED MONITORING SYSTEM</p>
+    </div>
 
-  <!-- ================================================================= -->
-  <!-- TEMPEL SCRIPT FIREBASE DARI SINI SAMPAI SEBELUM TAG </body> -->
-  <!-- ================================================================= -->
+    <div class="header-stats">
+      <div class="stat-card">
+        <span class="stat-label">Active Slots</span>
+        <span class="stat-value" id="globalActiveSlots" style="color: #cbd5e1;">0 / 48</span>
+      </div>
+      <div class="stat-card main-qty">
+        <span class="stat-label">Total Material</span>
+        <span class="stat-value" id="globalTotalQty">0 Kg</span>
+      </div>
+    </div>
 
-  <!-- 1. Library Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <div class="header-controls">
+      <button class="btn-summary-trigger" onclick="openInventorySummary()">
+        <span>📊 SUMMARY DETAIL</span>
+      </button>
+      <div class="legend-container">
+        <div class="legend-item">
+          <div class="indicator empty"></div>
+          <span>Empty</span>
+        </div>
+        <div class="legend-item">
+          <div class="indicator filled"></div>
+          <span>Ready</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="board-container">
+    <div class="row-line" id="topRow"></div>
+    <div class="row-line" id="bottomRow"></div>
+  </div>
+
+  <!-- POP-UP MODAL MULTI-ACTION FOR SLOT -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitle">LOCATION DETAILS</h3>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+
+      <div class="location-badge" id="modalLocationBadge">
+        LINE 1 — MACHINE 01 — INJECTOR 1
+      </div>
+
+      <div class="info-summary-card">
+        <div class="info-row">
+          <span class="info-label">Material Status:</span>
+          <span class="status-tag" id="summaryStatus">READY</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Model:</span>
+          <span class="info-value" id="summaryModel">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Color:</span>
+          <span class="info-value" id="summaryWarna">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Quantity (Qty):</span>
+          <span class="info-value" id="summaryQty">-</span>
+        </div>
+        <div class="info-row note-row">
+          <span class="info-label">Note / Remark:</span>
+          <span class="info-value note-value" id="summaryNote">-</span>
+        </div>
+      </div>
+
+      <!-- VIEW 1: MENU OPTIONS -->
+      <div id="viewMenu" class="menu-options">
+        <button class="btn-action take" onclick="actionTakeMaterial()">
+          <div>
+            <div>COLLECT / TAKE COMPOUND</div>
+            <div class="sub-text">For Machine Operator (Clear Slot)</div>
+          </div>
+          <span>➔</span>
+        </button>
+
+        <button class="btn-action update" onclick="showFormView()">
+          <div>
+            <div>INPUT / UPDATE DATA</div>
+            <div class="sub-text">For Mixing Operator (Set/Edit Details)</div>
+          </div>
+          <span>➔</span>
+        </button>
+      </div>
+
+      <!-- VIEW 2: FORM INPUT DATA -->
+      <div id="viewForm" style="display: none; flex-direction: column; gap: 10px;">
+        <div class="form-instruction">
+          <strong>Instruction:</strong> Fields marked with (<span class="required-star">*</span>) are required.
+        </div>
+
+        <div class="form-group">
+          <label>Model Name <span class="required-star">*</span></label>
+          <input type="text" id="modalModel" placeholder=". . ." oninput="removeError(this)">
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Color <span class="required-star">*</span></label>
+            <input type="text" id="modalWarna" placeholder=". . ." oninput="removeError(this)">
+          </div>
+          <div class="form-group">
+            <label>Qty (Kg) <span class="required-star">*</span></label>
+            <input type="number" id="modalQty" placeholder=". . ." min="0.1" step="any" oninput="removeError(this)">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Note / Description</label>
+          <textarea id="modalNote" placeholder="Additional details..."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-back" onclick="showMenuView()">Back</button>
+          <button class="btn-save" onclick="saveCurrentSlot()">SAVE PREPARATION</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- INVENTORY SUMMARY MODAL -->
+  <div class="modal-overlay" id="summaryModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>INVENTORY SUMMARY</h3>
+        <button class="close-btn" onclick="closeSummaryModal()">&times;</button>
+      </div>
+
+      <div class="summary-table-wrapper">
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Color</th>
+              <th style="text-align: center;">Slots</th>
+              <th style="text-align: right;">Total Qty</th>
+            </tr>
+          </thead>
+          <tbody id="summaryTableBody">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-back" style="width: 100%;" onclick="closeSummaryModal()">Close</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    // 2. Konfigurasi Firebase dari layar Anda tadi
-    const firebaseConfig = {
-      apiKey: "AIzaSyAc6HkXMsuB2wpYKbKHoYfuifdQVFykdHY",
-      authDomain: "lokasi-system.firebaseapp.com",
-      databaseURL: "https://lokasi-system-default-rtdb.firebaseio.com",
-      projectId: "lokasi-system",
-      storageBucket: "lokasi-system.firebasestorage.app",
-      messagingSenderId: "106677338807",
-      appId: "1:106677338807:web:87f73c81e13f9ee4ba0332",
-      measurementId: "G-QS4LC1WLCM"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-    const slotsRef = database.ref('slots');
-
-    // Mapping Line (Line 3 dilompati sesuai tampilan awal Anda)
     const lineMapping = [
       { line: 1, mc1: 1, mc2: 2, row: 'top' },
       { line: 2, mc1: 3, mc2: 4, row: 'top' },
+      { line: 3, mc1: 3, mc2: 4, row: 'top' },
       { line: 4, mc1: 5, mc2: 6, row: 'top' },
       { line: 5, mc1: 7, mc2: 8, row: 'top' },
       { line: 6, mc1: 9, mc2: 10, row: 'top' },
       { line: 7, mc1: 11, mc2: 12, row: 'top' },
-      { line: 8, mc1: 13, mc2: 14, row: 'bottom' },
-      { line: 9, mc1: 15, mc2: 16, row: 'bottom' },
-      { line: 10, mc1: 17, mc2: 18, row: 'bottom' },
-      { line: 11, mc1: 19, mc2: 20, row: 'bottom' },
-      { line: 12, mc1: 21, mc2: 22, row: 'bottom' },
-      { line: 13, mc1: 23, mc2: 24, row: 'bottom' }
+      { line: 8, mc1: 13, mc2: 14, row: 'top' },
+      { line: 9, mc1: 15, mc2: 16, row: 'top' },
+      { line: 10, mc1: 17, mc2: 18, row: 'top' },
+      { line: 11, mc1: 19, mc2: 20, row: 'top' },
+      { line: 12, mc1: 21, mc2: 22, row: 'top' }
     ];
 
-    let slotsState = {};
+    const slotsState = {};
     let activeSlotKey = null;
 
     function pad(num) { return String(num).padStart(2, '0'); }
 
-    // Synchronize otomatis secara real-time dari Firebase
-    slotsRef.on('value', (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        slotsState = data;
-      } else {
-        initDefaultSlots();
-      }
-      renderBoard();
+    lineMapping.forEach(item => {
+      const m1 = pad(item.mc1);
+      const m2 = pad(item.mc2);
+
+      const slots = [
+        { key: `L${item.line}-${m1}-A`, label: `${m1}-A`, mc: item.mc1, inj: '1' },
+        { key: `L${item.line}-${m2}-A`, label: `${m2}-A`, mc: item.mc2, inj: '1' },
+        { key: `L${item.line}-${m1}-b`, label: `${m1}-B`, mc: item.mc1, inj: '2' },
+        { key: `L${item.line}-${m2}-B`, label: `${m2}-B`, mc: item.mc2, inj: '2' }
+      ];
+
+      slots.forEach(s => {
+        slotsState[s.key] = {
+          line: item.line,
+          mesin: s.mc,
+          inj: s.inj,
+          label: s.label,
+          isFilled: false,
+          model: '',
+          warna: '',
+          qty: '',
+          note: ''
+        };
+      });
     });
 
-    function initDefaultSlots() {
-      lineMapping.forEach(item => {
-        const m1 = pad(item.mc1);
-        const m2 = pad(item.mc2);
+    slotsState['L2-04-A'].isFilled = true;
+    slotsState['L2-04-A'].model = '. . .';
+    slotsState['L2-04-A'].warna = '. . .';
+    slotsState['L2-04-A'].qty = '...';
+    slotsState['L2-04-A'].note = '. . .';
 
-        const slots = [
-          { key: `L${item.line}-${m1}-A`, label: `${m1}-A`, mc: item.mc1, inj: '1' },
-          { key: `L${item.line}-${m2}-A`, label: `${m2}-A`, mc: item.mc2, inj: '1' },
-          { key: `L${item.line}-${m1}-b`, label: `${m1}-b`, mc: item.mc1, inj: '2' },
-          { key: `L${item.line}-${m2}-B`, label: `${m2}-B`, mc: item.mc2, inj: '2' }
-        ];
-
-        slots.forEach(s => {
-          slotsState[s.key] = {
-            line: item.line,
-            mesin: s.mc,
-            inj: s.inj,
-            label: s.label,
-            isFilled: false,
-            model: '',
-            warna: '',
-            qty: '',
-            note: ''
-          };
-        });
-      });
-      slotsRef.set(slotsState);
-    }
+    slotsState['L4-05-A'].isFilled = true;
+    slotsState['L4-05-A'].model = 'Civic K24';
+    slotsState['L4-05-A'].warna = 'Black';
+    slotsState['L4-05-A'].qty = '50';
 
     function updateHeaderStats() {
       let grandTotalQty = 0;
@@ -108,17 +746,13 @@
         }
       });
 
-      const totalQtyEl = document.getElementById('globalTotalQty');
-      const activeSlotsEl = document.getElementById('globalActiveSlots');
-      if (totalQtyEl) totalQtyEl.innerText = `${grandTotalQty.toLocaleString('id-ID')} Kg`;
-      if (activeSlotsEl) activeSlotsEl.innerText = `${activeSlotsCount} / ${totalSlots}`;
+      document.getElementById('globalTotalQty').innerText = `${grandTotalQty.toLocaleString('id-ID')} Kg`;
+      document.getElementById('globalActiveSlots').innerText = `${activeSlotsCount} / ${totalSlots}`;
     }
 
     function renderBoard() {
       const topContainer = document.getElementById('topRow');
       const bottomContainer = document.getElementById('bottomRow');
-      if (!topContainer || !bottomContainer) return;
-
       topContainer.innerHTML = '';
       bottomContainer.innerHTML = '';
 
@@ -134,7 +768,7 @@
 
         let slotsHTML = '';
         slotKeys.forEach(key => {
-          const slot = slotsState[key] || { label: 'N/A', isFilled: false, qty: '' };
+          const slot = slotsState[key];
           const filledClass = slot.isFilled ? 'filled' : '';
           const subInfoHTML = slot.isFilled ? `<div class="sub-info">${slot.qty}Kg</div>` : '';
 
@@ -161,66 +795,9 @@
       updateHeaderStats();
     }
 
-    // Fungsi Simpan Inputan Ke Firebase
-    function saveCurrentSlot() {
-      if (!activeSlotKey) return;
-
-      const modelInput = document.getElementById('modalModel');
-      const warnaInput = document.getElementById('modalWarna');
-      const qtyInput = document.getElementById('modalQty');
-
-      const modelVal = modelInput.value.trim();
-      const warnaVal = warnaInput.value.trim();
-      const qtyVal = qtyInput.value.trim();
-
-      let isValid = true;
-      if (!modelVal) { modelInput.classList.add('input-error'); isValid = false; }
-      if (!warnaVal) { warnaInput.classList.add('input-error'); isValid = false; }
-      if (!qtyVal || parseFloat(qtyVal) <= 0) { qtyInput.classList.add('input-error'); isValid = false; }
-
-      if (!isValid) {
-        alert("Harap isi semua field wajib (Model, Color, dan Qty)!");
-        return;
-      }
-
-      const updatedData = {
-        ...slotsState[activeSlotKey],
-        isFilled: true,
-        model: modelVal,
-        warna: warnaVal,
-        qty: qtyVal,
-        note: document.getElementById('modalNote').value.trim() || '-'
-      };
-
-      database.ref(`slots/${activeSlotKey}`).update(updatedData)
-        .then(() => closeModal())
-        .catch((err) => alert("Gagal menyimpan ke Firebase: " + err.message));
-    }
-
-    // Fungsi Ambil Material / Kosongkan Slot di Firebase
-    function actionTakeMaterial() {
-      if (!activeSlotKey) return;
-      const slot = slotsState[activeSlotKey];
-      if (!slot || !slot.isFilled) return;
-
-      const emptyData = {
-        ...slot,
-        isFilled: false,
-        model: '',
-        warna: '',
-        qty: '',
-        note: ''
-      };
-
-      database.ref(`slots/${activeSlotKey}`).update(emptyData)
-        .then(() => closeModal())
-        .catch((err) => alert("Gagal mengupdate Firebase: " + err.message));
-    }
-
     function openModal(key) {
       activeSlotKey = key;
       const slot = slotsState[key];
-      if (!slot) return;
 
       document.getElementById('modalLocationBadge').innerText = 
         `LINE ${slot.line} — MACHINE ${pad(slot.mesin)} — INJECTOR ${slot.inj} (${slot.label})`;
@@ -269,53 +846,116 @@
       document.getElementById('viewForm').style.display = 'flex';
     }
 
-    function removeError(element) { element.classList.remove('input-error'); }
+    function removeError(element) {
+      element.classList.remove('input-error');
+    }
+
     function clearFormErrors() {
       document.getElementById('modalModel').classList.remove('input-error');
       document.getElementById('modalWarna').classList.remove('input-error');
       document.getElementById('modalQty').classList.remove('input-error');
     }
 
+    function actionTakeMaterial() {
+      if (!activeSlotKey) return;
+      const slot = slotsState[activeSlotKey];
+      if (!slot.isFilled) {
+        alert("This slot is already EMPTY!");
+        return;
+      }
+
+      slot.isFilled = false;
+      slot.model = '';
+      slot.warna = '';
+      slot.qty = '';
+      slot.note = '';
+
+      renderBoard();
+      closeModal();
+    }
+
+    function saveCurrentSlot() {
+      if (!activeSlotKey) return;
+
+      const modelInput = document.getElementById('modalModel');
+      const warnaInput = document.getElementById('modalWarna');
+      const qtyInput = document.getElementById('modalQty');
+
+      const modelVal = modelInput.value.trim();
+      const warnaVal = warnaInput.value.trim();
+      const qtyVal = qtyInput.value.trim();
+
+      let isValid = true;
+
+      if (!modelVal) { modelInput.classList.add('input-error'); isValid = false; }
+      if (!warnaVal) { warnaInput.classList.add('input-error'); isValid = false; }
+      if (!qtyVal || parseFloat(qtyVal) <= 0) { qtyInput.classList.add('input-error'); isValid = false; }
+
+      if (!isValid) {
+        alert("Harap isi semua field wajib (Model, Color, dan Qty)!");
+        return;
+      }
+
+      const slot = slotsState[activeSlotKey];
+      slot.isFilled = true;
+      slot.model = modelVal;
+      slot.warna = warnaVal;
+      slot.qty = qtyVal;
+      slot.note = document.getElementById('modalNote').value.trim() || '-';
+
+      renderBoard();
+      closeModal();
+    }
+
     function openInventorySummary() {
       const summaryMap = {};
+
       Object.values(slotsState).forEach(slot => {
         if (slot.isFilled) {
           const key = `${slot.model.trim().toUpperCase()}___${slot.warna.trim().toUpperCase()}`;
           const qty = parseFloat(slot.qty) || 0;
 
           if (!summaryMap[key]) {
-            summaryMap[key] = { model: slot.model, color: slot.warna, totalQty: 0, slotsCount: 0 };
+            summaryMap[key] = {
+              model: slot.model,
+              color: slot.warna,
+              totalQty: 0,
+              slotsCount: 0
+            };
           }
+
           summaryMap[key].totalQty += qty;
           summaryMap[key].slotsCount += 1;
         }
       });
 
       const tbody = document.getElementById('summaryTableBody');
-      if (tbody) {
-        tbody.innerHTML = '';
-        const items = Object.values(summaryMap);
-        if (items.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px;">No materials stored.</td></tr>`;
-        } else {
-          items.forEach(item => {
-            tbody.innerHTML += `
-              <tr>
-                <td><strong>${item.model}</strong></td>
-                <td>${item.color}</td>
-                <td class="slots-col">${item.slotsCount}</td>
-                <td class="qty-col">${item.totalQty.toLocaleString('id-ID')} Kg</td>
-              </tr>
-            `;
-          });
-        }
+      tbody.innerHTML = '';
+
+      const items = Object.values(summaryMap);
+      if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px;">No materials stored.</td></tr>`;
+      } else {
+        items.forEach(item => {
+          tbody.innerHTML += `
+            <tr>
+              <td><strong>${item.model}</strong></td>
+              <td>${item.color}</td>
+              <td class="slots-col">${item.slotsCount}</td>
+              <td class="qty-col">${item.totalQty.toLocaleString('id-ID')} Kg</td>
+            </tr>
+          `;
+        });
       }
+
       document.getElementById('summaryModalOverlay').classList.add('active');
     }
 
     function closeSummaryModal() {
       document.getElementById('summaryModalOverlay').classList.remove('active');
     }
+
+    renderBoard();
   </script>
 </body>
 </html>
