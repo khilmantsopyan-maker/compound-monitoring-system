@@ -619,17 +619,17 @@
 
         <div class="form-group">
           <label>Model Name <span class="required-star">*</span></label>
-          <input type="text" id="modalModel" placeholder="e.g. Civic K24 / HRV" oninput="removeError(this)">
+          <input type="text" id="modalModel" placeholder=". . ." oninput="removeError(this)">
         </div>
 
         <div class="form-row-2">
           <div class="form-group">
             <label>Color <span class="required-star">*</span></label>
-            <input type="text" id="modalWarna" placeholder="e.g. Red / Black" oninput="removeError(this)">
+            <input type="text" id="modalWarna" placeholder=". . ." oninput="removeError(this)">
           </div>
           <div class="form-group">
             <label>Qty (Kg) <span class="required-star">*</span></label>
-            <input type="number" id="modalQty" placeholder="50" min="0.1" step="any" oninput="removeError(this)">
+            <input type="number" id="modalQty" placeholder=". . ." min="0.1" step="any" oninput="removeError(this)">
           </div>
         </div>
 
@@ -680,16 +680,16 @@
     const lineMapping = [
       { line: 1, mc1: 1, mc2: 2, row: 'top' },
       { line: 2, mc1: 3, mc2: 4, row: 'top' },
+      { line: 3, mc1: 3, mc2: 4, row: 'top' },
       { line: 4, mc1: 5, mc2: 6, row: 'top' },
       { line: 5, mc1: 7, mc2: 8, row: 'top' },
       { line: 6, mc1: 9, mc2: 10, row: 'top' },
       { line: 7, mc1: 11, mc2: 12, row: 'top' },
-      { line: 8, mc1: 13, mc2: 14, row: 'bottom' },
-      { line: 9, mc1: 15, mc2: 16, row: 'bottom' },
-      { line: 10, mc1: 17, mc2: 18, row: 'bottom' },
-      { line: 11, mc1: 19, mc2: 20, row: 'bottom' },
-      { line: 12, mc1: 21, mc2: 22, row: 'bottom' },
-      { line: 13, mc1: 23, mc2: 24, row: 'bottom' }
+      { line: 8, mc1: 13, mc2: 14, row: 'top' },
+      { line: 9, mc1: 15, mc2: 16, row: 'top' },
+      { line: 10, mc1: 17, mc2: 18, row: 'top' },
+      { line: 11, mc1: 19, mc2: 20, row: 'top' },
+      { line: 12, mc1: 21, mc2: 22, row: 'top' }
     ];
 
     const slotsState = {};
@@ -704,7 +704,7 @@
       const slots = [
         { key: `L${item.line}-${m1}-A`, label: `${m1}-A`, mc: item.mc1, inj: '1' },
         { key: `L${item.line}-${m2}-A`, label: `${m2}-A`, mc: item.mc2, inj: '1' },
-        { key: `L${item.line}-${m1}-b`, label: `${m1}-b`, mc: item.mc1, inj: '2' },
+        { key: `L${item.line}-${m1}-b`, label: `${m1}-B`, mc: item.mc1, inj: '2' },
         { key: `L${item.line}-${m2}-B`, label: `${m2}-B`, mc: item.mc2, inj: '2' }
       ];
 
